@@ -3,19 +3,16 @@ package pj5;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class CSP {
-	String filename;
-	Map<Character, Bag> bagMap;
-	Map<Character, Item> itemMap;
-	int high;
-	int low;
+	private String filename;
+	private Map<Character, Bag> bagMap;
+	private Map<Character, Item> itemMap;
+	private int high;
+	private int low;
 	public CSP(String filename){
 		this.filename = filename;
 		this.bagMap = new HashMap<>();
@@ -54,7 +51,7 @@ public class CSP {
 						Item i = itemMap.get(itemName);
 						for ( String str: info) {     
 							if(str != info[0]){
-								i.allowed.add(str.charAt(0));
+								i.addAllowed(str.charAt(0));
 							}
 						}
 						itemMap.put(itemName, i);
@@ -63,7 +60,7 @@ public class CSP {
 						Item i = itemMap.get(itemName);
 						for ( String str: info) {     
 							if(str != info[0]){
-								i.forbidden.add(str.charAt(0));
+								i.addForbidden(str.charAt(0));
 							}
 						}
 						itemMap.put(itemName, i);
@@ -72,8 +69,8 @@ public class CSP {
 						char itemName2 = info[1].charAt(0);
 						Item i1 = itemMap.get(itemName1);
 						Item i2 = itemMap.get(itemName2);
-						i1.friends.add(i2);
-						i2.friends.add(i1);
+						i1.addFriends(i2);
+						i2.addFriends(i1);
 						itemMap.put(itemName1, i1);
 						itemMap.put(itemName2, i2);
 					}else if (section == 7){ //binary not equals
@@ -81,8 +78,8 @@ public class CSP {
 						char itemName2 = info[1].charAt(0);
 						Item i1 = itemMap.get(itemName1);
 						Item i2 = itemMap.get(itemName2);
-						i1.enemies.add(i2);
-						i2.enemies.add(i1);
+						i1.addEnemies(i2);
+						i2.addEnemies(i1);
 						itemMap.put(itemName1, i1);
 						itemMap.put(itemName2, i2);
 					}else if (section == 8){ //binary simultaneous			
@@ -93,15 +90,15 @@ public class CSP {
 						Item i1 = itemMap.get(itemName1);
 						Item i2 = itemMap.get(itemName2);
 						//?????????????????
-						i1.mutualFriends.add(i2);
-						i1.mutualA.add(bagName1);
-						i1.mutualB.add(bagName2);
+						i1.addMutualFriends(i2);
+						i1.addMutualA(bagName1);
+						i1.addMutualB(bagName2);
 						//i1.mutualFriends.add(i2);
 						//i1.mutualA.add(bagName2);
 						//i1.mutualB.add(bagName1);
-						i2.mutualFriends.add(i1);
-						i2.mutualA.add(bagName2);
-						i2.mutualB.add(bagName1);
+						i2.addMutualFriends(i1);
+						i2.addMutualA(bagName2);
+						i2.addMutualB(bagName1);
 						//i2.mutualFriends.add(i1);
 						//i2.mutualA.add(bagName1);
 						//i2.mutualB.add(bagName2);
@@ -125,22 +122,22 @@ public class CSP {
 		for (Map.Entry<Character, Item> entry : itemMap.entrySet()){
 			System.out.println(entry.getKey());
 			System.out.println(entry.getValue());
-			System.out.println("name " + entry.getValue().name);
-			System.out.println("weight " + entry.getValue().weight);
-			System.out.println("allowed "+ entry.getValue().allowed);
-			System.out.println("forbidden " + entry.getValue().forbidden);
-			System.out.println("friends " + entry.getValue().friends);
-			System.out.println("enemies "+ entry.getValue().enemies);
-			System.out.println("mutual Friends "+ entry.getValue().mutualFriends);
-			System.out.println("mutualA "+entry.getValue().mutualA);
-			System.out.println("mutualB "+entry.getValue().mutualB);
+			System.out.println("name " + entry.getValue().getName());
+			System.out.println("weight " + entry.getValue().getWeight());
+			System.out.println("allowed "+ entry.getValue().getAllowed());
+			System.out.println("forbidden " + entry.getValue().getForbidden());
+			System.out.println("friends " + entry.getValue().getFriends());
+			System.out.println("enemies "+ entry.getValue().getEnemies());
+			System.out.println("mutual Friends "+ entry.getValue().getMutualFriends());
+			System.out.println("mutualA "+entry.getValue().getMutualA());
+			System.out.println("mutualB "+entry.getValue().getMutualB());
 		}
 		for (Entry<Character, Bag> entry : bagMap.entrySet()){
 			System.out.println(entry.getKey());
-			System.out.println("Bag name "+entry.getValue().name);
-			System.out.println("capacity "+entry.getValue().capacity);
-			System.out.println("max "+entry.getValue().max);
-			System.out.println("stored "+entry.getValue().stored);
+			System.out.println("Bag name "+entry.getValue().getName());
+			System.out.println("capacity "+entry.getValue().getCapacity());
+			System.out.println("max "+entry.getValue().getMax());
+			System.out.println("stored "+entry.getValue().getStored());
 		}
 		System.out.println("high "+high);
 		System.out.println("low "+low);
