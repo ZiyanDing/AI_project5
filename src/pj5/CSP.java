@@ -10,13 +10,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class CSP {
-	private String filename;
-	private Map<Character, Bag> bagMap; 
-	private Map<Character, Item> itemMap; 
-	private int high;
+	private String filename; //input filename
+	private Map<Character, Bag> bagMap; //key is bag name
+	private Map<Character, Item> itemMap; //key is item name
+	
+	private List<Bag> bagList;
+	private List<Item> itemList;
+	
+	private int high; 
 	private int low;
 	private boolean equity;
-	private Map<Character, List<Character>> assignment;
 	public CSP(String filename){
 		this.filename = filename;
 		this.bagMap = new HashMap<>();
@@ -24,6 +27,8 @@ public class CSP {
 		this.high = Integer.MAX_VALUE;
 		this.low = 0;
 		this.equity = false;
+		this.bagList = new ArrayList<>();
+		this.itemList = new ArrayList<>();
 	}
 
 	public void Readfile(){
@@ -115,40 +120,46 @@ public class CSP {
 					}
 				}
 			}
-			br.close();	
+			br.close();
+			itemList = new ArrayList<>(itemMap.values());
+			bagList = new ArrayList<>(bagMap.values());
+			
 		}catch(IOException e){
 			System.out.println("Warning: IOException");
 			System.out.println(this.filename + " is not exist");
 		}
 	}
-	
-/*	
-	public void backtracking(){
-		recursiveBackchecking();
+
+	//following is backtracking algorithm
+	public Map<Character, List<Character>> backtracking(){
+		Map<Character, List<Character>> assignment = new HashMap<>();
+		return recursiveBackchecking(assignment);
 	}
 	
-	public void recursiveBackchecking(){
+	public Map<Character, List<Character>> recursiveBackchecking(Map<Character, List<Character>> assignment){
+		if (isCompleted(assignment) && checkBeforeOutput()){
+			return assignment;
+		}
 		Item item = selectUnassignedVariable(itemMap);
-		List<Character> domainList = orderDomainValue(item);
-		for (char bagName: domainList){
-			if (consistant(bagName, item, assignment)){
-				Bag b = bagMap.get(bagName);
-				b.addAssignment(item.getName());
-				Assignment result = recursiveBackchecking(assignment);
+		List<Bag> domainList = orderDomainValue(item, assignment);
+		for (Bag bag: domainList){
+			if (consistant(bag, item, assignment)){
+				addAssignment(bag,item, assignment);
+				Map<Character, List<Character>> result = recursiveBackchecking(assignment);
 				if (result != null){
 					return result;
 				}
-				assignment.removeAssignment(bagName, item.getName());
+				removeAssignment(bag,item, assignment);
 			}
 		}
 		return null;
 	}
 	
-	public boolean consistant(char bagName, Item item, Assignment assignment){
-		List<Character> itemList = assignment.getValue(bagName);
+	public boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment){
+		//List<Character> itemList = assignment.get(bagName);
 		//gets current assignment for bag
-		Bag bag = bagMap.get(bagName);
-
+		//Bag bag = bagMap.get(bagName);
+		char bagName = bag.getName();
 		//check capacity
 		if ((bag.getCapacity() - item.getWeight()) < 0){
 			return false;
@@ -185,7 +196,7 @@ public class CSP {
 			List<Character> iBagListA = i.getMutualA();
 			List<Character> iBagListB = i.getMutualB();
 			for (char c: iBagListA){
-				if (assignment.getItemNames(c).contains(i.getName())){
+				if (assignment.get(c).contains(i.getName())){
 					if (!iBagListB.contains(bagName)){
 						return false;
 					}
@@ -199,67 +210,55 @@ public class CSP {
 		Item i = (Item) itemMap.entrySet().iterator().next();
 		return i;
 	}
-	*/
-/*	
-	public boolean checkBeforeOutput(Assignment assignment){
+	
+	
+	public boolean checkBeforeOutput(){
 		if(equity == false){
 			return false;
 		}
-	}
-	
-	public boolean isCompleted(Assignment assignment){
-		
-	}
-*/
-/*	
-	public List<Character> orderDomainValue(Item var){
-		List<Character> bagNameList = new ArrayList<Character>(bagMap.keySet());
-		if (var.getAllowed().size() != 0){
-			return var.getAllowed();
-		} else if (var.getForbidden().size() != 0){
-			List<Character> forbiddenList = var.getForbidden();		
-			for(char bn: bagNameList){
-				if (!forbiddenList.contains(bn)){
-					var.addAllowed(bn);
-				}
+		for (Bag bag: bagMap.values()){
+			int ratio = bag.getCapacity()/bag.getMax();
+			if (ratio < 0.9 || ratio > 1){
+				return false;
 			}
-			return var.getAllowed();
-		} else {
-			return bagNameList;
 		}
+		return true;
 	}
-*/
-	public List<Character> orderDomainValue(Item var){
-		List<Character> bagNameList = new ArrayList<Character>(bagMap.keySet());
-		return bagNameList;
+
+	public boolean isCompleted(Map<Character, List<Character>> assignment){
+		return (assignment.size() == bagMap.size());		
+	}
+
+	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment){
+		return bagList;
 	}
 	
-	public void addAssignment(char bagName, char itemName){
+	public void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment){
+		char bagName = bag.getName();
 		List<Character> itemList = assignment.get(bagName);
 		if(itemList != null){
-			itemList.add(itemName);
-			assignment.put(bagName, itemList);
-			bagMap.get(bagName);
+			itemList.add(item.getName());
+			assignment.put(bagName, itemList);		
 		}else{
-			assignment.put(bagName, new ArrayList<>(itemName));
+			assignment.put(bagName, new ArrayList<>(item.getName()));
 		}
+		bag.reduceCapacity(item);
+		bagMap.put(bagName, bag);
 	}
 	
-	public List<Character> getValue(char bagName){
-		return assignment.get(bagName);
-	}
-	
-	public void removeAssignment(char bagName, char itemName){
+
+	public void removeAssignment(Bag bag,Item item, Map<Character, List<Character>> assignment){
+		char bagName = bag.getName();
 		List<Character> itemList = assignment.get(bagName);
 		if(itemList != null){
-			itemList.remove(itemName);
+			itemList.remove(item.getName());
 			assignment.put(bagName, itemList);
 		}
+		bag.addCapacity(item);
+		bagMap.put(bagName, bag);
 	}
 	
-	public List<Character> getItemNames(char bagName){
-		return assignment.get(bagName);
-	}
+	
 	public void test1(){
 		for (Map.Entry<Character, Item> entry : itemMap.entrySet()){
 			System.out.println(entry.getKey());
