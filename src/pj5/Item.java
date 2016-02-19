@@ -14,6 +14,8 @@ public class Item {
 	private List<Item> mutualFriends;
 	private List<Character> mutualA;
 	private List<Character> mutualB;
+	private char storedBag;
+	
 	public Item(char name, int weight){
 		this.name = name;
 		this.weight = weight;
@@ -25,6 +27,7 @@ public class Item {
 		this.mutualFriends = new ArrayList<>();
 		this.mutualA = new ArrayList<>();
 		this.mutualB = new ArrayList<>();
+		this.storedBag = ' ';
 	}
 	
 	public void addAllowed(char c){
@@ -48,6 +51,10 @@ public class Item {
 	}
 	public void addMutualB(char c){
 		this.mutualB.add(c);
+	}
+	
+	public void storeInBag(char bagName){
+		this.storedBag = bagName;
 	}
 	
 	public char getName(){return name;}

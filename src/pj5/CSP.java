@@ -15,12 +15,15 @@ public class CSP {
 	private Map<Character, Item> itemMap; 
 	private int high;
 	private int low;
+	private boolean equity;
+	private Map<Character, List<Character>> assignment;
 	public CSP(String filename){
 		this.filename = filename;
 		this.bagMap = new HashMap<>();
 		this.itemMap = new HashMap<>();
 		this.high = Integer.MAX_VALUE;
 		this.low = 0;
+		this.equity = false;
 	}
 
 	public void Readfile(){
@@ -111,7 +114,6 @@ public class CSP {
 						return;
 					}
 				}
-
 			}
 			br.close();	
 		}catch(IOException e){
@@ -120,27 +122,96 @@ public class CSP {
 		}
 	}
 	
-	/*
-	public List<Assignment> backtracking(){
-		List<Assignment> assignment = new ArrayList<>();
-		return recursiveBackchecking(assignment);
+/*	
+	public void backtracking(){
+		recursiveBackchecking();
 	}
 	
-	public List<Assignment> recursiveBackchecking(List<Assignment> assignment){
-		Item var = selectUnassignedVariable(itemMap);
-		List<Character> domainList = orderDomainValue(var);
-		for (char value: domainList){
-			if (consistant(value, assignment)){
-				assignment.add(e)
+	public void recursiveBackchecking(){
+		Item item = selectUnassignedVariable(itemMap);
+		List<Character> domainList = orderDomainValue(item);
+		for (char bagName: domainList){
+			if (consistant(bagName, item, assignment)){
+				Bag b = bagMap.get(bagName);
+				b.addAssignment(item.getName());
+				Assignment result = recursiveBackchecking(assignment);
+				if (result != null){
+					return result;
+				}
+				assignment.removeAssignment(bagName, item.getName());
 			}
 		}
+		return null;
 	}
-	*/
+	
+	public boolean consistant(char bagName, Item item, Assignment assignment){
+		List<Character> itemList = assignment.getValue(bagName);
+		//gets current assignment for bag
+		Bag bag = bagMap.get(bagName);
+
+		//check capacity
+		if ((bag.getCapacity() - item.getWeight()) < 0){
+			return false;
+		}
+		//bag fit-limit
+		if (bag.getStored() >= high){
+			return false;
+		}
+		//unary constraints
+		if ((item.getAllowed().size()!= 0) && !(item.getAllowed().contains(bagName))){
+			return false;
+		}
+		if (item.getForbidden().contains(bagName)){
+			return false;
+		}
+		//binary constrains
+		//equity
+		List<Item> friends = item.getFriends();
+		for(Item i: friends){
+			if (itemList.contains(i.getName())){
+				this.equity = true;
+			}
+		}
+		//inequity
+		List<Item> enemies = item.getEnemies();
+		for(Item i: enemies){
+			if (itemList.contains(i.getName())){
+				return false;
+			}
+		}
+		//mutual Inclusive
+		List<Item> mutualFriends = item.getMutualFriends();
+		for(Item i: mutualFriends){
+			List<Character> iBagListA = i.getMutualA();
+			List<Character> iBagListB = i.getMutualB();
+			for (char c: iBagListA){
+				if (assignment.getItemNames(c).contains(i.getName())){
+					if (!iBagListB.contains(bagName)){
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	
 	public Item selectUnassignedVariable(Map<Character, Item> itemMap){	
 		Item i = (Item) itemMap.entrySet().iterator().next();
 		return i;
 	}
+	*/
+/*	
+	public boolean checkBeforeOutput(Assignment assignment){
+		if(equity == false){
+			return false;
+		}
+	}
 	
+	public boolean isCompleted(Assignment assignment){
+		
+	}
+*/
+/*	
 	public List<Character> orderDomainValue(Item var){
 		List<Character> bagNameList = new ArrayList<Character>(bagMap.keySet());
 		if (var.getAllowed().size() != 0){
@@ -157,7 +228,38 @@ public class CSP {
 			return bagNameList;
 		}
 	}
-
+*/
+	public List<Character> orderDomainValue(Item var){
+		List<Character> bagNameList = new ArrayList<Character>(bagMap.keySet());
+		return bagNameList;
+	}
+	
+	public void addAssignment(char bagName, char itemName){
+		List<Character> itemList = assignment.get(bagName);
+		if(itemList != null){
+			itemList.add(itemName);
+			assignment.put(bagName, itemList);
+			bagMap.get(bagName);
+		}else{
+			assignment.put(bagName, new ArrayList<>(itemName));
+		}
+	}
+	
+	public List<Character> getValue(char bagName){
+		return assignment.get(bagName);
+	}
+	
+	public void removeAssignment(char bagName, char itemName){
+		List<Character> itemList = assignment.get(bagName);
+		if(itemList != null){
+			itemList.remove(itemName);
+			assignment.put(bagName, itemList);
+		}
+	}
+	
+	public List<Character> getItemNames(char bagName){
+		return assignment.get(bagName);
+	}
 	public void test1(){
 		for (Map.Entry<Character, Item> entry : itemMap.entrySet()){
 			System.out.println(entry.getKey());
