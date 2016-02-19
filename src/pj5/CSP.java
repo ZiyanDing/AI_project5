@@ -3,14 +3,16 @@ package pj5;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class CSP {
 	private String filename;
-	private Map<Character, Bag> bagMap;
-	private Map<Character, Item> itemMap;
+	private Map<Character, Bag> bagMap; 
+	private Map<Character, Item> itemMap; 
 	private int high;
 	private int low;
 	public CSP(String filename){
@@ -117,6 +119,44 @@ public class CSP {
 			System.out.println(this.filename + " is not exist");
 		}
 	}
+	
+	/*
+	public List<Assignment> backtracking(){
+		List<Assignment> assignment = new ArrayList<>();
+		return recursiveBackchecking(assignment);
+	}
+	
+	public List<Assignment> recursiveBackchecking(List<Assignment> assignment){
+		Item var = selectUnassignedVariable(itemMap);
+		List<Character> domainList = orderDomainValue(var);
+		for (char value: domainList){
+			if (consistant(value, assignment)){
+				assignment.add(e)
+			}
+		}
+	}
+	*/
+	public Item selectUnassignedVariable(Map<Character, Item> itemMap){	
+		Item i = (Item) itemMap.entrySet().iterator().next();
+		return i;
+	}
+	
+	public List<Character> orderDomainValue(Item var){
+		List<Character> bagNameList = new ArrayList<Character>(bagMap.keySet());
+		if (var.getAllowed().size() != 0){
+			return var.getAllowed();
+		} else if (var.getForbidden().size() != 0){
+			List<Character> forbiddenList = var.getForbidden();		
+			for(char bn: bagNameList){
+				if (!forbiddenList.contains(bn)){
+					var.addAllowed(bn);
+				}
+			}
+			return var.getAllowed();
+		} else {
+			return bagNameList;
+		}
+	}
 
 	public void test1(){
 		for (Map.Entry<Character, Item> entry : itemMap.entrySet()){
@@ -157,3 +197,4 @@ public class CSP {
 		return;
 	}
 }
+
