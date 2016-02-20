@@ -21,6 +21,12 @@ public class Bag {
 		this.capacity = this.capacity + i.getWeight();
 	}
 	
+	public void addStored(){
+		this.stored ++;
+	}
+	public void reduceStored(){
+		this.stored--;
+	}
 	public char getName(){return name;}
 	public int getCapacity(){return capacity;}
 	public int getMax(){return max;}

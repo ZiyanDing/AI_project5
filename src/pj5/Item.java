@@ -18,7 +18,7 @@ public class Item {
 	public Item(char name, int weight){
 		this.name = name;
 		this.weight = weight;
-		this.stored = 'N';
+		this.stored = ' ';
 		this.allowed = new ArrayList<>();
 		this.forbidden = new ArrayList<>();
 		this.friends = new ArrayList<>();
@@ -48,6 +48,14 @@ public class Item {
 	}
 	public void addMutualB(char c){
 		this.mutualB.add(c);
+	}
+	
+	public void addStored(Bag b){
+		this.stored = b.getName();
+	}
+	
+	public void removeStored(Bag b){
+		this.stored = ' ';
 	}
 	
 	public char getName(){return name;}

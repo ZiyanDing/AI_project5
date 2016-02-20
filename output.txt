@@ -1,0 +1,10 @@
+a A C E 
+Number of items: 3
+Total weight: 6/6
+Wasted Capacity 0
+
+b B D F 
+Number of items: 3
+Total weight: 6/6
+Wasted Capacity 0
+

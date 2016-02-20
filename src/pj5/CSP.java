@@ -1,9 +1,8 @@
 package pj5;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,128 +18,49 @@ public class CSP {
 	
 	private int high; 
 	private int low;
-	private boolean equity;
 	public CSP(String filename){
 		this.filename = filename;
 		this.bagMap = new HashMap<>();
 		this.itemMap = new HashMap<>();
 		this.high = Integer.MAX_VALUE;
 		this.low = 0;
-		this.equity = false;
 		this.bagList = new ArrayList<>();
-		this.itemList = new ArrayList<>();
+		this.itemList = new ArrayList<>();	
 	}
-
-	public void Readfile(){
-		try{
-			FileReader fileReader = new FileReader(filename);
-			BufferedReader br = new BufferedReader(fileReader);
-			String line = null;
-			int section = 0; //used to decide which section is reading
-			while ((line = br.readLine()) != null){
-				//System.out.println(line);
-				if (line.startsWith("#####")){
-					section++;
-				} else {
-					String[] info = line.split(" ");
-					if (section == 1){	//variables
-						char name = info[0].charAt(0);
-						int weight = Integer.parseInt(info[1]);
-						Item i = new Item(name, weight);
-						itemMap.put(name, i);
-					}else if (section == 2){   //domain
-						char name = info[0].charAt(0);
-						int weight = Integer.parseInt(info[1]);
-						Bag b = new Bag(name, weight);
-						bagMap.put(name, b);
-					}else if (section == 3){ //fitting limits
-						low = Integer.parseInt(info[0]);
-						high = Integer.parseInt(info[1]);
-					}else if (section == 4){ //unary inclusive
-						char itemName = info[0].charAt(0);
-						Item i = itemMap.get(itemName);
-						for ( String str: info) {     
-							if(str != info[0]){
-								i.addAllowed(str.charAt(0));
-							}
-						}
-						itemMap.put(itemName, i);
-					}else if (section == 5){ //unary exclusive
-						char itemName = info[0].charAt(0);
-						Item i = itemMap.get(itemName);
-						for ( String str: info) {     
-							if(str != info[0]){
-								i.addForbidden(str.charAt(0));
-							}
-						}
-						itemMap.put(itemName, i);
-					}else if (section == 6){ //binary equals
-						char itemName1 = info[0].charAt(0);
-						char itemName2 = info[1].charAt(0);
-						Item i1 = itemMap.get(itemName1);
-						Item i2 = itemMap.get(itemName2);
-						i1.addFriends(i2);
-						i2.addFriends(i1);
-						itemMap.put(itemName1, i1);
-						itemMap.put(itemName2, i2);
-					}else if (section == 7){ //binary not equals
-						char itemName1 = info[0].charAt(0);
-						char itemName2 = info[1].charAt(0);
-						Item i1 = itemMap.get(itemName1);
-						Item i2 = itemMap.get(itemName2);
-						i1.addEnemies(i2);
-						i2.addEnemies(i1);
-						itemMap.put(itemName1, i1);
-						itemMap.put(itemName2, i2);
-					}else if (section == 8){ //binary simultaneous			
-						char itemName1 = info[0].charAt(0);
-						char itemName2 = info[1].charAt(0);
-						char bagName1 = info[2].charAt(0);
-						char bagName2 = info[3].charAt(0);
-						Item i1 = itemMap.get(itemName1);
-						Item i2 = itemMap.get(itemName2);
-						//?????????????????
-						i1.addMutualFriends(i2);
-						i1.addMutualA(bagName1);
-						i1.addMutualB(bagName2);
-						//i1.mutualFriends.add(i2);
-						//i1.mutualA.add(bagName2);
-						//i1.mutualB.add(bagName1);
-						i2.addMutualFriends(i1);
-						i2.addMutualA(bagName2);
-						i2.addMutualB(bagName1);
-						//i2.mutualFriends.add(i1);
-						//i2.mutualA.add(bagName1);
-						//i2.mutualB.add(bagName2);
-
-					}else{
-						System.out.println("Wrong format of information");
-						br.close();
-						return;
-					}
-				}
-			}
-			br.close();
-			itemList = new ArrayList<>(itemMap.values());
-			bagList = new ArrayList<>(bagMap.values());
-			
-		}catch(IOException e){
-			System.out.println("Warning: IOException");
-			System.out.println(this.filename + " is not exist");
-		}
+	public void input(){	
+		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
+		fd.readfile();
+		this.bagMap = fd.getBagMap();
+		this.itemMap = fd.getItemMap();
+		this.high = fd.getHigh();
+		this.low = fd.getLow();
+		this.bagList = fd.getBagList();
+		this.itemList = fd.getItemList();
+	}
+	
+	public void output(Map<Character, List<Character>> assignment){
+		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
+		fd.writeFile(assignment);
 	}
 
 	//following is backtracking algorithm
 	public Map<Character, List<Character>> backtracking(){
 		Map<Character, List<Character>> assignment = new HashMap<>();
-		return recursiveBackchecking(assignment);
+		assignment = recursiveBackchecking(assignment);
+		return assignment;
 	}
 	
 	public Map<Character, List<Character>> recursiveBackchecking(Map<Character, List<Character>> assignment){
-		if (isCompleted(assignment) && checkBeforeOutput()){
-			return assignment;
+		if (isCompleted(assignment)){
+			System.out.println("1");
+			if (checkBeforeOutput()){
+				System.out.println("2");
+				return assignment;
+			} else {
+				return null;
+			}
 		}
-		Item item = selectUnassignedVariable(itemMap);
+		Item item = selectUnassignedVariable(assignment);
 		List<Bag> domainList = orderDomainValue(item, assignment);
 		for (Bag bag: domainList){
 			if (consistant(bag, item, assignment)){
@@ -156,12 +76,9 @@ public class CSP {
 	}
 	
 	public boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment){
-		//List<Character> itemList = assignment.get(bagName);
-		//gets current assignment for bag
-		//Bag bag = bagMap.get(bagName);
 		char bagName = bag.getName();
 		//check capacity
-		if ((bag.getCapacity() - item.getWeight()) < 0){
+		if (bag.getCapacity() < item.getWeight()){
 			return false;
 		}
 		//bag fit-limit
@@ -178,55 +95,130 @@ public class CSP {
 		//binary constrains
 		//equity
 		List<Item> friends = item.getFriends();
-		for(Item i: friends){
-			if (itemList.contains(i.getName())){
-				this.equity = true;
-			}
-		}
-		//inequity
-		List<Item> enemies = item.getEnemies();
-		for(Item i: enemies){
-			if (itemList.contains(i.getName())){
-				return false;
-			}
-		}
-		//mutual Inclusive
-		List<Item> mutualFriends = item.getMutualFriends();
-		for(Item i: mutualFriends){
-			List<Character> iBagListA = i.getMutualA();
-			List<Character> iBagListB = i.getMutualB();
-			for (char c: iBagListA){
-				if (assignment.get(c).contains(i.getName())){
-					if (!iBagListB.contains(bagName)){
-						return false;
-					}
+		List<Character> assignedCurBag = assignment.get(bag.getName());
+		List<Character> assigned = getAssignedVar(assignment);
+		
+		for (Item f: friends){
+			if (assigned != null && assigned.contains(f.getName())){
+				if (assignedCurBag == null || !assignedCurBag.contains(f.getName())){
+					return false;
 				}
 			}
 		}
+		
+		//inequity
+		List<Item> enemies = item.getEnemies();
+		for(Item i: enemies){
+			if (assignedCurBag !=null && assignedCurBag.contains(i.getName())){
+				return false;
+			}
+		}
+		
+		//mutual Inclusive
+		List<Item> mutualFriends = item.getMutualFriends();
+		//System.out.println();
+		//System.out.println("----------item " + item.getName() + "  " +item);
+		//System.out.println("mutual friends " + mutualFriends);
+		List<Character> bagListA = item.getMutualA();
+		List<Character> bagListB = item.getMutualB();
+		
+		List<Item> mf = new ArrayList<>();
+		List<Character> myList = new ArrayList<>();
+		List<Character> hisList = new ArrayList<>();
+			
+		//System.out.println("myBagList " + item.getName() + "  " + bagListA);
+		//System.out.println("hisBagList " + item.getName() + "  " + bagListB);
+		//System.out.println("myBagList1 " + item.getName() + "  " + myList);
+		//System.out.println("hisBagList2 " + item.getName() + "  " + hisList);
+		
+		//if mutual friend is assigned
+		int index;
+		for (index = 0; index < mutualFriends.size();index++){
+			if(assigned.contains(mutualFriends.get(index).getName())){	
+				Item f = mutualFriends.get(index);
+				//System.out.println("item---" + f.getName());
+				char bn = f.getStored();
+				if (bn == bagListB.get(index)){
+					if (bagName != bagListA.get(index)){
+						return false;
+					} 
+					//System.out.println("=========" + bagName);
+				}
+			}
+		}
+		int idx;
+		if (bagListA.contains(bag.getName())){
+			for(idx = 0; idx < bagListA.size(); idx++){
+				if (bagListA.get(idx).equals(bagName)){
+					mf.add(mutualFriends.get(idx));
+					myList.add(bagListA.get(idx));
+					hisList.add(bagListB.get(idx));
+				}
+			}
+		}
+		
+		//detects mutual exclusive
+		for (idx = 0; idx < mf.size(); idx++){
+			Item it = mf.get(idx);
+			char bn = hisList.get(idx);
+			int occurrences = Collections.frequency(mf, it);
+			if (occurrences > 1){
+				return false;
+			}
+			if (assigned.contains(it.getName())){
+				//System.out.println("assigned  " + it.getName());
+				//System.out.println("assigned 2 " + bn);
+				//System.out.println("myBagList1 " + item.getName() + "  " + myList + bagName);
+				//System.out.println("hisBagList2 " + item.getName() + "  " + hisList);
+				List<Character> tempList = assignment.get(bn); 
+				if (tempList == null || !tempList.contains(it.getName())){
+					//System.out.println("false");
+					return false;
+				}
+			} 
+		} 
 		return true;
 	}
 	
-	public Item selectUnassignedVariable(Map<Character, Item> itemMap){	
-		Item i = (Item) itemMap.entrySet().iterator().next();
-		return i;
+	public Item selectUnassignedVariable(Map<Character, List<Character>> assignment){	
+			List<Character> assignedValues = getAssignedVar(assignment);
+			for (Item i: itemList){
+				if (!assignedValues.contains(i.getName())){
+					return i;
+				}
+			}
+
+		return null;
+	}
+	
+	public List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
+		List<Character> assignedValues = new ArrayList<>();
+		if (assignment.size() > 0){
+			for (Map.Entry<Character, List<Character>> entry : assignment.entrySet()){
+				assignedValues.addAll(entry.getValue());
+			}
+		}
+		return assignedValues;
 	}
 	
 	
 	public boolean checkBeforeOutput(){
-		if(equity == false){
-			return false;
-		}
 		for (Bag bag: bagMap.values()){
-			int ratio = bag.getCapacity()/bag.getMax();
-			if (ratio < 0.9 || ratio > 1){
+			int used = bag.getMax() - bag.getCapacity();
+			int requiredStored = (int) (bag.getMax() * 0.9);
+			if (used < requiredStored){
+				return false;
+			}
+			if (bag.getStored() < low){
 				return false;
 			}
 		}
 		return true;
 	}
 
+	
 	public boolean isCompleted(Map<Character, List<Character>> assignment){
-		return (assignment.size() == bagMap.size());		
+		return (itemList.size() == getAssignedVar(assignment).size());	
 	}
 
 	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment){
@@ -235,27 +227,43 @@ public class CSP {
 	
 	public void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment){
 		char bagName = bag.getName();
-		List<Character> itemList = assignment.get(bagName);
-		if(itemList != null){
-			itemList.add(item.getName());
-			assignment.put(bagName, itemList);		
+		char itemName = item.getName();
+		List<Character> tempItemList = assignment.get(bagName);
+		if(tempItemList != null){
+			tempItemList.add(itemName);
+			assignment.put(bagName, tempItemList);		
 		}else{
-			assignment.put(bagName, new ArrayList<>(item.getName()));
+			List<Character> tempItemList2 = new ArrayList<>();
+			tempItemList2.add(itemName);
+			assignment.put(bagName, tempItemList2);
+			
 		}
 		bag.reduceCapacity(item);
+		bag.addStored();
+		item.addStored(bag);
 		bagMap.put(bagName, bag);
+		itemMap.put(itemName, item);
 	}
 	
 
 	public void removeAssignment(Bag bag,Item item, Map<Character, List<Character>> assignment){
 		char bagName = bag.getName();
-		List<Character> itemList = assignment.get(bagName);
-		if(itemList != null){
-			itemList.remove(item.getName());
-			assignment.put(bagName, itemList);
+		List<Character> tempItemList = assignment.get(bagName);
+		int index = 0;
+		if(tempItemList != null){
+			for (index = 0; index < tempItemList.size(); index++){
+				if (tempItemList.get(index) == item.getName()){
+					tempItemList.remove(index);
+					break;
+				}
+			}
+			assignment.put(bagName, tempItemList);
 		}
 		bag.addCapacity(item);
+		bag.reduceStored();
+		item.removeStored(bag);
 		bagMap.put(bagName, bag);
+		itemMap.put(item.getName(), item);
 	}
 	
 	
@@ -291,9 +299,11 @@ public class CSP {
 		}
 		String filename = args[0];
 		CSP csp = new CSP(filename);
-		//CSP csp = new CSP("inputs/input24.txt");
-		csp.Readfile();
-
+		//CSP csp = new CSP("inputs/input18.txt");
+		csp.input();
+		Map<Character, List<Character>> assignment = new HashMap<>();
+		assignment = csp.backtracking();
+		csp.output(assignment);
 		//csp.test1();
 		return;
 	}
