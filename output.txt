@@ -1,10 +1,15 @@
-a A C E 
+a C D G 
 Number of items: 3
-Total weight: 6/6
+Total weight: 5/5
 Wasted Capacity 0
 
-b B D F 
+b A B H 
 Number of items: 3
-Total weight: 6/6
+Total weight: 5/5
+Wasted Capacity 0
+
+c E F I 
+Number of items: 3
+Total weight: 3/3
 Wasted Capacity 0
 

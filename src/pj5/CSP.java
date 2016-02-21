@@ -116,67 +116,27 @@ public class CSP {
 		
 		//mutual Inclusive
 		List<Item> mutualFriends = item.getMutualFriends();
-		//System.out.println();
-		//System.out.println("----------item " + item.getName() + "  " +item);
-		//System.out.println("mutual friends " + mutualFriends);
 		List<Character> bagListA = item.getMutualA();
 		List<Character> bagListB = item.getMutualB();
 		
-		List<Item> mf = new ArrayList<>();
-		List<Character> myList = new ArrayList<>();
-		List<Character> hisList = new ArrayList<>();
-			
-		//System.out.println("myBagList " + item.getName() + "  " + bagListA);
-		//System.out.println("hisBagList " + item.getName() + "  " + bagListB);
-		//System.out.println("myBagList1 " + item.getName() + "  " + myList);
-		//System.out.println("hisBagList2 " + item.getName() + "  " + hisList);
-		
-		//if mutual friend is assigned
-		int index;
-		for (index = 0; index < mutualFriends.size();index++){
-			if(assigned.contains(mutualFriends.get(index).getName())){	
-				Item f = mutualFriends.get(index);
-				//System.out.println("item---" + f.getName());
-				char bn = f.getStored();
-				if (bn == bagListB.get(index)){
+		//mutual friends
+		for (int index = 0; index < mutualFriends.size(); index++){
+			Item f = mutualFriends.get(index);
+			if (assigned.contains(f.getName())){
+				//if friend assigned to a "mutual inclusive" bag 
+				if (f.getStored() == bagListB.get(index)){
 					if (bagName != bagListA.get(index)){
 						return false;
-					} 
-					//System.out.println("=========" + bagName);
+					}
+				}
+				//if current item assigned to a "mutual inclusive" bag
+				if (bagName == bagListA.get(index)){
+					if(f.getStored() != bagListB.get(index)){
+						return false;
+					}
 				}
 			}
 		}
-		int idx;
-		if (bagListA.contains(bag.getName())){
-			for(idx = 0; idx < bagListA.size(); idx++){
-				if (bagListA.get(idx).equals(bagName)){
-					mf.add(mutualFriends.get(idx));
-					myList.add(bagListA.get(idx));
-					hisList.add(bagListB.get(idx));
-				}
-			}
-		}
-		
-		//detects mutual exclusive
-		for (idx = 0; idx < mf.size(); idx++){
-			Item it = mf.get(idx);
-			char bn = hisList.get(idx);
-			int occurrences = Collections.frequency(mf, it);
-			if (occurrences > 1){
-				return false;
-			}
-			if (assigned.contains(it.getName())){
-				//System.out.println("assigned  " + it.getName());
-				//System.out.println("assigned 2 " + bn);
-				//System.out.println("myBagList1 " + item.getName() + "  " + myList + bagName);
-				//System.out.println("hisBagList2 " + item.getName() + "  " + hisList);
-				List<Character> tempList = assignment.get(bn); 
-				if (tempList == null || !tempList.contains(it.getName())){
-					//System.out.println("false");
-					return false;
-				}
-			} 
-		} 
 		return true;
 	}
 	
@@ -187,8 +147,51 @@ public class CSP {
 					return i;
 				}
 			}
-
 		return null;
+	}
+	//consider the future
+	public boolean forwardChecking(Item item, char bagName, Map<Character, List<Character>> assignment){
+		List<Character> unassignedVar = getUnassignedVar(assignment);
+		//mutual friends
+		List<Item> mutualFriends = item.getMutualFriends();
+		List<Character> mutualA = item.getMutualA();
+		List<Character> mutualB = item.getMutualB();		
+		List<Item> unassignedFriends = new ArrayList<>();
+		List<Character> hisList = new ArrayList<>();	
+		//get unassigned mutual friends
+		//if the item is assigned to this bag, if it is possible for its mutual friends be assigned 
+		//to required bag
+		for (int index = 0; index < mutualFriends.size(); index++){
+			char m = mutualFriends.get(index).getName();
+			if (unassignedVar.contains(m) && mutualA.get(index) == bagName){
+				unassignedFriends.add(mutualFriends.get(index));
+				hisList.add(mutualB.get(index));
+			}
+		}
+		for (int index = 0; index < hisList.size(); index++){
+			Item tempI = unassignedFriends.get(index);
+			Bag tempB = bagMap.get(hisList.get(index));
+			int occurrences = Collections.frequency(unassignedFriends, tempI);
+			if (occurrences > 1){
+				return false;
+			}
+			//if there is no capacity to place mutual friend
+			if (tempB.getCapacity() < tempI.getWeight()){
+				return false;
+			}	
+		}
+		return true;
+	}
+	
+	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment){
+		List<Character> unassignedVar = new ArrayList<>();
+		List<Character> assignedVar = getAssignedVar(assignment);
+		for(Item i: itemList){
+			if (!assignedVar.contains(i.getName())){
+				unassignedVar.add(i.getName());
+			}
+		}
+		return unassignedVar;
 	}
 	
 	public List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
@@ -299,7 +302,7 @@ public class CSP {
 		}
 		String filename = args[0];
 		CSP csp = new CSP(filename);
-		//CSP csp = new CSP("inputs/input18.txt");
+		//CSP csp = new CSP("inputs/input25.txt");
 		csp.input();
 		Map<Character, List<Character>> assignment = new HashMap<>();
 		assignment = csp.backtracking();
