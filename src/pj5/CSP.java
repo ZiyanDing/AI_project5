@@ -66,19 +66,19 @@ public class CSP {
 		}
 		
 		for (Item item : itemList){
-			for (Bag bag: orderDomainValue(item, assignment)){
+			for (Bag bag: orderDomainValue(item, assignment, bagList, high)){
 				item.addPossibleBag(bag.getName());
 			}
 		}
 		Item item = selectUnassignedVariable(assignment, itemList);
-		List<Bag> domainList = orderDomainValue(item, assignment);
+		List<Bag> domainList = orderDomainValue(item, assignment, bagList, high);
 		for (Bag bag: domainList){
 			char bagName = bag.getName();
 			List<Character> unassignedVar = getUnassignedVar(assignment, itemList);
 			if(!selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
 				return null;
 			}
-			if (consistant(bag, item, assignment)){
+			if (consistant(bag, item, assignment, high)){
 				addAssignment(bag,item, assignment);
 				Map<Character, List<Character>> result = recursiveBackchecking(assignment);
 				if (result != null){
@@ -90,14 +90,14 @@ public class CSP {
 		return null;
 	}
 	
-	public boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment){
+	public boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment, int bagMax){
 		char bagName = bag.getName();
 		//check capacity
 		if (bag.getCapacity() < item.getWeight()){
 			return false;
 		}
 		//bag fit-limit
-		if (bag.getStored() >= high){
+		if (bag.getStored() >= bagMax){
 			return false;
 		}
 		//unary constraints
@@ -210,11 +210,11 @@ public class CSP {
 		return (itemList.size() == getAssignedVar(assignment).size());	
 	}
 
-	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment){
+	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment, List<Bag> baglist, int bagMax){
 		List<Bag> output = new ArrayList<Bag>();
-		for (Bag bag: bagList)
+		for (Bag bag: baglist)
 		{
-			if (consistant(bag, var, assignment))
+			if (consistant(bag, var, assignment, bagMax))
 			{
 				output.add(bag);
 			}
