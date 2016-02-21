@@ -8,8 +8,8 @@ public class Bag {
 	
 	public Bag(char name, int capacity){
 		this.name = name;
-		this.capacity = capacity;
-		this.max = capacity;
+		this.capacity = capacity; //rest capacity that can be used to store
+		this.max = capacity;//maximum capacity
 		this.stored = 0;
 	}
 	//returns capacity after putting item i in bag
