@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class CSP {
+	//algorithm wrappers
+	private Selector selector;
+	
 	private String filename; //input filename
 	private Map<Character, Bag> bagMap; //key is bag name
 	private Map<Character, Item> itemMap; //key is item name
@@ -18,8 +21,9 @@ public class CSP {
 	
 	private int high; 
 	private int low;
-	public CSP(String filename){
+	public CSP(String filename, Selector selector){
 		this.filename = filename;
+		this.selector = selector;
 		this.bagMap = new HashMap<>();
 		this.itemMap = new HashMap<>();
 		this.high = Integer.MAX_VALUE;
@@ -60,7 +64,7 @@ public class CSP {
 				return null;
 			}
 		}
-		Item item = selectUnassignedVariable(assignment);
+		Item item = selectUnassignedVariable(assignment, itemList);
 		List<Bag> domainList = orderDomainValue(item, assignment);
 		for (Bag bag: domainList){
 			if (consistant(bag, item, assignment)){
@@ -180,15 +184,17 @@ public class CSP {
 		return true;
 	}
 	
-	public Item selectUnassignedVariable(Map<Character, List<Character>> assignment){	
-			List<Character> assignedValues = getAssignedVar(assignment);
-			for (Item i: itemList){
-				if (!assignedValues.contains(i.getName())){
-					return i;
-				}
+	public Item selectUnassignedVariable(Map<Character, List<Character>> assignment, List<Item> itemList){	
+		return selector.select(assignment, itemList);
+		/*
+		List<Character> assignedValues = getAssignedVar(assignment);
+		for (Item i: itemList){
+			if (!assignedValues.contains(i.getName())){
+				return i;
 			}
+		}
 
-		return null;
+		return null;*/
 	}
 	
 	public List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
@@ -298,7 +304,8 @@ public class CSP {
 			return;
 		}
 		String filename = args[0];
-		CSP csp = new CSP(filename);
+		DefaultSelector s = new DefaultSelector();
+		CSP csp = new CSP(filename, s);
 		//CSP csp = new CSP("inputs/input18.txt");
 		csp.input();
 		Map<Character, List<Character>> assignment = new HashMap<>();
