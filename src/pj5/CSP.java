@@ -2,7 +2,6 @@ package pj5;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +10,7 @@ import java.util.Map.Entry;
 public class CSP {
 	//algorithm wrappers
 	private Selector selector;
-	
+	private Selector2 selector2;
 	private String filename; //input filename
 	private Map<Character, Bag> bagMap; //key is bag name
 	private Map<Character, Item> itemMap; //key is item name
@@ -21,7 +20,7 @@ public class CSP {
 	
 	private int high; 
 	private int low;
-	public CSP(String filename, Selector selector){
+	public CSP(String filename, Selector selector, Selector2 selector2){
 		this.filename = filename;
 		this.selector = selector;
 		this.bagMap = new HashMap<>();
@@ -30,6 +29,7 @@ public class CSP {
 		this.low = 0;
 		this.bagList = new ArrayList<>();
 		this.itemList = new ArrayList<>();	
+		this.selector2 = selector2;
 	}
 	public void input(){	
 		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
@@ -73,6 +73,11 @@ public class CSP {
 		Item item = selectUnassignedVariable(assignment, itemList);
 		List<Bag> domainList = orderDomainValue(item, assignment);
 		for (Bag bag: domainList){
+			char bagName = bag.getName();
+			List<Character> unassignedVar = getUnassignedVar(assignment);
+			if(!selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
+				return null;
+			}
 			if (consistant(bag, item, assignment)){
 				addAssignment(bag,item, assignment);
 				Map<Character, List<Character>> result = recursiveBackchecking(assignment);
@@ -126,67 +131,28 @@ public class CSP {
 		
 		//mutual Inclusive
 		List<Item> mutualFriends = item.getMutualFriends();
-		//System.out.println();
-		//System.out.println("----------item " + item.getName() + "  " +item);
-		//System.out.println("mutual friends " + mutualFriends);
 		List<Character> bagListA = item.getMutualA();
 		List<Character> bagListB = item.getMutualB();
 		
-		List<Item> mf = new ArrayList<>();
-		List<Character> myList = new ArrayList<>();
-		List<Character> hisList = new ArrayList<>();
-			
-		//System.out.println("myBagList " + item.getName() + "  " + bagListA);
-		//System.out.println("hisBagList " + item.getName() + "  " + bagListB);
-		//System.out.println("myBagList1 " + item.getName() + "  " + myList);
-		//System.out.println("hisBagList2 " + item.getName() + "  " + hisList);
-		
-		//if mutual friend is assigned
-		int index;
-		for (index = 0; index < mutualFriends.size();index++){
-			if(assigned.contains(mutualFriends.get(index).getName())){	
-				Item f = mutualFriends.get(index);
-				//System.out.println("item---" + f.getName());
-				char bn = f.getStored();
-				if (bn == bagListB.get(index)){
+		//mutual friends
+		for (int index = 0; index < mutualFriends.size(); index++){
+			Item f = mutualFriends.get(index);
+			if (assigned.contains(f.getName())){
+				//if friend assigned to a "mutual inclusive" bag 
+				if (f.getStored() == bagListB.get(index)){
 					if (bagName != bagListA.get(index)){
 						return false;
-					} 
-					//System.out.println("=========" + bagName);
+					}
+				}
+				//if current item assigned to a "mutual inclusive" bag
+				if (bagName == bagListA.get(index)){
+					if(f.getStored() != bagListB.get(index)){
+						return false;
+					}
 				}
 			}
-		}
-		int idx;
-		if (bagListA.contains(bag.getName())){
-			for(idx = 0; idx < bagListA.size(); idx++){
-				if (bagListA.get(idx).equals(bagName)){
-					mf.add(mutualFriends.get(idx));
-					myList.add(bagListA.get(idx));
-					hisList.add(bagListB.get(idx));
-				}
-			}
-		}
+		}		
 		
-		//detects mutual exclusive
-		for (idx = 0; idx < mf.size(); idx++){
-			Item it = mf.get(idx);
-			char bn = hisList.get(idx);
-			int occurrences = Collections.frequency(mf, it);
-			if (occurrences > 1){
-				return false;
-			}
-			if (assigned.contains(it.getName())){
-				//System.out.println("assigned  " + it.getName());
-				//System.out.println("assigned 2 " + bn);
-				//System.out.println("myBagList1 " + item.getName() + "  " + myList + bagName);
-				//System.out.println("hisBagList2 " + item.getName() + "  " + hisList);
-				List<Character> tempList = assignment.get(bn); 
-				if (tempList == null || !tempList.contains(it.getName())){
-					//System.out.println("false");
-					return false;
-				}
-			} 
-		} 
 		return true;
 	}
 	
@@ -201,6 +167,17 @@ public class CSP {
 		}
 
 		return null;*/
+	}
+	
+	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment){
+		List<Character> unassignedVar = new ArrayList<>();
+		List<Character> assignedVar = getAssignedVar(assignment);
+		for(Item i: itemList){
+			if (!assignedVar.contains(i.getName())){
+				unassignedVar.add(i.getName());
+			}
+		}
+		return unassignedVar;
 	}
 	
 	public List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
@@ -313,23 +290,25 @@ public class CSP {
 	}
 
 	public static void main(String[] args) throws IOException{
-		if (args.length < 1 || args.length > 3){
-			System.out.println("[Error]Usage: csp input.txt [useMRV Heuristic [use degree Heurstic]] \nwhere useMRV Heuristic and use degree Heuristic should be booleans.");
+		if (args.length != 4){
+			System.out.println("[Error]Usage: csp input.txt useMRVHeuristic useDegreeHeurstic useForwardChecking\nwhere useMRVHeuristic, useDegreeHeuristic, and useForwardChecking should be booleans (either True or False).");
 			return;
 		}
 		String filename = args[0];
 		
 		//choose whether we'll use Minimum Remaining Values Heurstic or Not
 		Selector s;
-		if (args.length >= 3 && Boolean.valueOf(args[1]) && Boolean.valueOf(args[2])){
+		Selector2 s2;
+
+		if (Boolean.valueOf(args[1]) && Boolean.valueOf(args[2])){
 			s = new MRVAndDegreeSelector();
 			//System.out.println("using MRV+Degree");
 		}
-		else if (args.length >= 3 && Boolean.valueOf(args[2])){
+		else if (Boolean.valueOf(args[2])){
 			s = new DegreeSelector();
 			//System.out.println("using Degree");
 		}
-		else if (args.length >= 2 && Boolean.valueOf(args[1])){
+		else if (Boolean.valueOf(args[1])){
 			s = new MinimumRemainingValuesSelector();
 			//System.out.println("using MRV");
 		}
@@ -337,7 +316,13 @@ public class CSP {
 			s = new DefaultSelector();
 			//System.out.println("using default selector");
 		}
-		CSP csp = new CSP(filename, s);
+		//if using forward checking or not
+		if (Boolean.valueOf(args[4])){
+			s2 = new ForwardChecking();
+		} else {
+			s2 = new DefaultSelector2();
+		}
+		CSP csp = new CSP(filename, s, s2);
 		//CSP csp = new CSP("inputs/input18.txt");
 		csp.input();
 		Map<Character, List<Character>> assignment = new HashMap<>();

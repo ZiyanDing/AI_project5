@@ -6,12 +6,12 @@ import java.util.List;
 public class Item {
 	private char name;
 	private int weight;
-	private char stored;
-	private List<Character> allowed;
-	private List<Character> forbidden;
-	private List<Item> friends;
-	private List<Item> enemies;
-	private List<Item> mutualFriends;
+	private char stored; //which bag it is stored
+	private List<Character> allowed; //unary inclusive constraint
+	private List<Character> forbidden; //unary exclusive constraint
+	private List<Item> friends; //equal binary constraint
+	private List<Item> enemies; //not equal binary constraint
+	private List<Item> mutualFriends; //mutual Inclusive binary constraints
 	private List<Character> mutualA;
 	private List<Character> mutualB;
 	
