@@ -64,6 +64,15 @@ public class CSP {
 				return null;
 			}
 		}
+		
+		//it's kinda dumb how we get the domain so many times
+		for (Item item : itemList)
+		{
+			for (Bag bag: orderDomainValue(item, assignment))
+			{
+				item.addPossibleBag(bag.getName());
+			}
+		}
 		Item item = selectUnassignedVariable(assignment, itemList);
 		List<Bag> domainList = orderDomainValue(item, assignment);
 		for (Bag bag: domainList){
@@ -228,7 +237,15 @@ public class CSP {
 	}
 
 	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment){
-		return bagList;
+		List<Bag> output = new ArrayList<Bag>();
+		for (Bag bag: bagList)
+		{
+			if (consistant(bag, var, assignment))
+			{
+				output.add(bag);
+			}
+		}
+		return output;
 	}
 	
 	public void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment){
@@ -299,12 +316,21 @@ public class CSP {
 	}
 
 	public static void main(String[] args) throws IOException{
-		if (args.length != 1){
-			System.out.println("[Error]Usage: csp input.txt");
+		if (args.length < 1 || args.length > 2){
+			System.out.println("[Error]Usage: csp input.txt [useMRV Heuristic]\nwhere useMRV Heuristic should be a boolean");
 			return;
 		}
 		String filename = args[0];
-		DefaultSelector s = new DefaultSelector();
+		
+		//choose whether we'll use Minimum Remaining Values Heurstic or Not
+		Selector s;
+		if (args.length >= 2 && Boolean.valueOf(args[1])){
+			s = new MinimumRemainingValuesSelector();
+			//System.out.println("using MRV");
+		}
+		else {
+			s = new DefaultSelector();
+		}
 		CSP csp = new CSP(filename, s);
 		//CSP csp = new CSP("inputs/input18.txt");
 		csp.input();

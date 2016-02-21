@@ -15,6 +15,8 @@ public class Item {
 	private List<Character> mutualA;
 	private List<Character> mutualB;
 	
+	private List<Character> possibleBags;
+	
 	public Item(char name, int weight){
 		this.name = name;
 		this.weight = weight;
@@ -26,6 +28,7 @@ public class Item {
 		this.mutualFriends = new ArrayList<>();
 		this.mutualA = new ArrayList<>();
 		this.mutualB = new ArrayList<>();
+		this.possibleBags = new ArrayList<>();
 	}
 	
 	public void addAllowed(char c){
@@ -58,6 +61,10 @@ public class Item {
 		this.stored = ' ';
 	}
 	
+	public void addPossibleBag(char b){
+		this.possibleBags.add(b);
+	}
+	
 	public char getName(){return name;}
 	public int getWeight(){return weight;}
 	public char getStored(){return stored;}
@@ -68,5 +75,6 @@ public class Item {
 	public List<Item> getMutualFriends(){return mutualFriends;}
 	public List<Character> getMutualA(){return mutualA;}
 	public List<Character> getMutualB(){return mutualB;}
+	public List<Character> getPossibleBags(){return possibleBags;}
 	
 }

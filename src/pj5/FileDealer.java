@@ -181,7 +181,7 @@ public class FileDealer {
 				writer.write("\n");
 				writer.write("Number of items: " + itemNames.size() + "\n");
 				writer.write("Total weight: " + (max-capacity) +"/" + max + "\n");
-				writer.write("Wasted Capacity " + capacity);
+				writer.write("Wasted capacity: " + capacity);
 				writer.write("\n\n");
 			}
 			writer.flush();
