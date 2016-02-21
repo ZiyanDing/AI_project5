@@ -179,9 +179,9 @@ public class FileDealer {
 					writer.write(c + " ");
 				}
 				writer.write("\n");
-				writer.write("Number of items: " + itemNames.size() + "\n");
-				writer.write("Total weight: " + (max-capacity) +"/" + max + "\n");
-				writer.write("Wasted capacity: " + capacity);
+				writer.write("number of items: " + itemNames.size() + "\n");
+				writer.write("total weight: " + (max-capacity) +"/" + max + "\n");
+				writer.write("wasted capacity: " + capacity);
 				writer.write("\n\n");
 			}
 			writer.flush();
