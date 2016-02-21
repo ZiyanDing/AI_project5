@@ -68,8 +68,10 @@ public class CSP {
 		}
 		
 		for (Item item : itemList){
-			for (Bag bag: orderDomainValue(item, assignment, bagList, high)){
-				item.addPossibleBag(bag.getName());
+			for (Bag bag: bagList){
+				if (consistant(bag, item, assignment, high)){
+					item.addPossibleBag(bag.getName());
+				}
 			}
 		}
 		Item item = selectUnassignedVariable(assignment, itemList);
@@ -81,12 +83,12 @@ public class CSP {
 				return null;
 			}
 			if (consistant(bag, item, assignment, high)){
-				addAssignment(bag,item, assignment);
+				addAssignment(bag,item, assignment, bagMap, itemMap);
 				Map<Character, List<Character>> result = recursiveBackchecking(assignment);
 				if (result != null){
 					return result;
 				}
-				removeAssignment(bag,item, assignment);
+				removeAssignment(bag,item, assignment, bagMap, itemMap);
 			}
 		}
 		return null;
@@ -213,7 +215,7 @@ public class CSP {
 	}
 
 	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment, List<Bag> baglist, int bagMax){
-		return orderer.orderDomainValue(var, assignment, baglist, bagMax);
+		return orderer.orderDomainValue(var, itemList, assignment, baglist, bagMax);
 		/*List<Bag> output = new ArrayList<Bag>();
 		for (Bag bag: baglist)
 		{
@@ -225,7 +227,12 @@ public class CSP {
 		return output;*/
 	}
 	
-	public void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment){
+	public static void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
+		addAssignmentHelper(bag, item, assignment);
+		updateMaps(bag, item, assignment, bagmap, itemmap);
+	}
+	//helper function to modify an assignment by putting the given item in the given bag
+	public static void addAssignmentHelper(Bag bag, Item item, Map<Character, List<Character>> assignment){
 		char bagName = bag.getName();
 		char itemName = item.getName();
 		List<Character> tempItemList = assignment.get(bagName);
@@ -241,12 +248,20 @@ public class CSP {
 		bag.reduceCapacity(item);
 		bag.addStored();
 		item.addStored(bag);
-		bagMap.put(bagName, bag);
-		itemMap.put(itemName, item);
+	}
+	//helper function to update appropriate maps
+	public static void updateMaps(Bag bag, Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
+		bagmap.put(bag.getName(), bag);
+		itemmap.put(item.getName(), item);
 	}
 	
 
-	public void removeAssignment(Bag bag,Item item, Map<Character, List<Character>> assignment){
+	public static void removeAssignment(Bag bag,Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
+		removeAssignmentHelper(bag, item, assignment);
+		updateMaps(bag, item, assignment, bagmap, itemmap);
+	}
+	
+	public static void removeAssignmentHelper(Bag bag, Item item, Map<Character, List<Character>> assignment){
 		char bagName = bag.getName();
 		List<Character> tempItemList = assignment.get(bagName);
 		int index = 0;
@@ -262,8 +277,6 @@ public class CSP {
 		bag.addCapacity(item);
 		bag.reduceStored();
 		item.removeStored(bag);
-		bagMap.put(bagName, bag);
-		itemMap.put(item.getName(), item);
 	}
 	
 	
@@ -293,8 +306,8 @@ public class CSP {
 	}
 
 	public static void main(String[] args) throws IOException{
-		if (args.length != 4){
-			System.out.println("[Error]Usage: csp input.txt useMRVHeuristic useDegreeHeurstic useForwardChecking\nwhere useMRVHeuristic, useDegreeHeuristic, and useForwardChecking should be booleans (either True or False).");
+		if (args.length != 5){
+			System.out.println("[Error]Usage: csp input.txt useMRVHeuristic useDegreeHeurstic useForwardChecking useLCVHeuristic\nwhere useMRVHeuristic, useDegreeHeuristic, useForwardChecking, and useLCVHeuristic should be booleans (either True or False).");
 			return;
 		}
 		String filename = args[0];
@@ -302,7 +315,7 @@ public class CSP {
 		//choose whether we'll use Minimum Remaining Values Heurstic or Not
 		Selector s;
 		Selector2 s2;
-		Orderer o = new DefaultOrderer();
+		Orderer o;
 
 		if (Boolean.valueOf(args[1]) && Boolean.valueOf(args[2])){
 			s = new MRVAndDegreeSelector();
@@ -325,6 +338,13 @@ public class CSP {
 			s2 = new ForwardChecking();
 		} else {
 			s2 = new DefaultSelector2();
+		}
+		
+		if (Boolean.valueOf(args[4])){
+			o = new LCVOrderer();
+		}
+		else{
+			o = new DefaultOrderer();
 		}
 		CSP csp = new CSP(filename, s, s2, o);
 		//CSP csp = new CSP("inputs/input18.txt");
