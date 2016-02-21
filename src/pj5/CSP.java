@@ -11,14 +11,14 @@ import java.util.Map.Entry;
 public class CSP {
 	private String filename; //input filename
 	private Map<Character, Bag> bagMap; //key is bag name
-	private Map<Character, Item> itemMap; //key is item name
+	private Map<Character, Item> itemMap; //key is item name	
+	private List<Bag> bagList; //all bags
+	private List<Item> itemList; //all items
+	private Selecter2 selecter2;
 	
-	private List<Bag> bagList;
-	private List<Item> itemList;
-	
-	private int high; 
-	private int low;
-	public CSP(String filename){
+	private int high; //captures the bag fit limit
+	private int low; //captures the bag fit limit
+	public CSP(String filename, Selecter2 selecter2){
 		this.filename = filename;
 		this.bagMap = new HashMap<>();
 		this.itemMap = new HashMap<>();
@@ -65,6 +65,11 @@ public class CSP {
 		for (Bag bag: domainList){
 			if (consistant(bag, item, assignment)){
 				addAssignment(bag,item, assignment);
+				char bagName = bag.getName();
+				List<Character> unassignedVar = getUnassignedVar(assignment);
+				if(!selecter2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
+					return null;
+				}
 				Map<Character, List<Character>> result = recursiveBackchecking(assignment);
 				if (result != null){
 					return result;
@@ -148,39 +153,6 @@ public class CSP {
 				}
 			}
 		return null;
-	}
-	//consider the future
-	public boolean forwardChecking(Item item, char bagName, Map<Character, List<Character>> assignment){
-		List<Character> unassignedVar = getUnassignedVar(assignment);
-		//mutual friends
-		List<Item> mutualFriends = item.getMutualFriends();
-		List<Character> mutualA = item.getMutualA();
-		List<Character> mutualB = item.getMutualB();		
-		List<Item> unassignedFriends = new ArrayList<>();
-		List<Character> hisList = new ArrayList<>();	
-		//get unassigned mutual friends
-		//if the item is assigned to this bag, if it is possible for its mutual friends be assigned 
-		//to required bag
-		for (int index = 0; index < mutualFriends.size(); index++){
-			char m = mutualFriends.get(index).getName();
-			if (unassignedVar.contains(m) && mutualA.get(index) == bagName){
-				unassignedFriends.add(mutualFriends.get(index));
-				hisList.add(mutualB.get(index));
-			}
-		}
-		for (int index = 0; index < hisList.size(); index++){
-			Item tempI = unassignedFriends.get(index);
-			Bag tempB = bagMap.get(hisList.get(index));
-			int occurrences = Collections.frequency(unassignedFriends, tempI);
-			if (occurrences > 1){
-				return false;
-			}
-			//if there is no capacity to place mutual friend
-			if (tempB.getCapacity() < tempI.getWeight()){
-				return false;
-			}	
-		}
-		return true;
 	}
 	
 	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment){

@@ -14,7 +14,6 @@ public class Item {
 	private List<Item> mutualFriends;//mutual Inclusive binary constraints
 	private List<Character> mutualA; //used for mutual friends(bag name) 
 	private List<Character> mutualB; //used for mutual friends(bag name)
-	//A B x y
 	
 	public Item(char name, int weight){
 		this.name = name;
