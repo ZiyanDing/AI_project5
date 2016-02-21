@@ -19,7 +19,7 @@ public class MinimumRemainingValuesSelector implements Selector {
 		int minvalues = Integer.MAX_VALUE;
 		Item output = null;
 		for (Item i: itemList){
-			if (!assignedValues.contains(i.getName()) && i.getPossibleBags().size() < minvalues){
+			if (!assignedValues.contains(i.getName()) && i.getPossibleBags().size() <= minvalues){
 				minvalues = i.getPossibleBags().size();
 				output = i;
 			}

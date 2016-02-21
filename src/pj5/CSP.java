@@ -65,11 +65,8 @@ public class CSP {
 			}
 		}
 		
-		//it's kinda dumb how we get the domain so many times
-		for (Item item : itemList)
-		{
-			for (Bag bag: orderDomainValue(item, assignment))
-			{
+		for (Item item : itemList){
+			for (Bag bag: orderDomainValue(item, assignment)){
 				item.addPossibleBag(bag.getName());
 			}
 		}
@@ -316,20 +313,29 @@ public class CSP {
 	}
 
 	public static void main(String[] args) throws IOException{
-		if (args.length < 1 || args.length > 2){
-			System.out.println("[Error]Usage: csp input.txt [useMRV Heuristic]\nwhere useMRV Heuristic should be a boolean");
+		if (args.length < 1 || args.length > 3){
+			System.out.println("[Error]Usage: csp input.txt [useMRV Heuristic [use degree Heurstic]] \nwhere useMRV Heuristic and use degree Heuristic should be booleans.");
 			return;
 		}
 		String filename = args[0];
 		
 		//choose whether we'll use Minimum Remaining Values Heurstic or Not
 		Selector s;
-		if (args.length >= 2 && Boolean.valueOf(args[1])){
+		if (args.length >= 3 && Boolean.valueOf(args[1]) && Boolean.valueOf(args[2])){
+			s = new MRVAndDegreeSelector();
+			//System.out.println("using MRV+Degree");
+		}
+		else if (args.length >= 3 && Boolean.valueOf(args[2])){
+			s = new DegreeSelector();
+			//System.out.println("using Degree");
+		}
+		else if (args.length >= 2 && Boolean.valueOf(args[1])){
 			s = new MinimumRemainingValuesSelector();
 			//System.out.println("using MRV");
 		}
 		else {
 			s = new DefaultSelector();
+			//System.out.println("using default selector");
 		}
 		CSP csp = new CSP(filename, s);
 		//CSP csp = new CSP("inputs/input18.txt");
