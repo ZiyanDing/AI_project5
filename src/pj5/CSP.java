@@ -2,7 +2,6 @@ package pj5;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +29,7 @@ public class CSP {
 		this.low = 0;
 		this.bagList = new ArrayList<>();
 		this.itemList = new ArrayList<>();	
+		this.selector2 = selector2;
 	}
 	public void input(){	
 		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
@@ -76,6 +76,11 @@ public class CSP {
 		Item item = selectUnassignedVariable(assignment, itemList);
 		List<Bag> domainList = orderDomainValue(item, assignment);
 		for (Bag bag: domainList){
+			char bagName = bag.getName();
+			List<Character> unassignedVar = getUnassignedVar(assignment);
+			if(!selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
+				return null;
+			}
 			if (consistant(bag, item, assignment)){
 				addAssignment(bag,item, assignment);
 				Map<Character, List<Character>> result = recursiveBackchecking(assignment);
@@ -165,6 +170,17 @@ public class CSP {
 		}
 
 		return null;*/
+	}
+	
+	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment){
+		List<Character> unassignedVar = new ArrayList<>();
+		List<Character> assignedVar = getAssignedVar(assignment);
+		for(Item i: itemList){
+			if (!assignedVar.contains(i.getName())){
+				unassignedVar.add(i.getName());
+			}
+		}
+		return unassignedVar;
 	}
 	
 	public List<Character> getAssignedVar(Map<Character, List<Character>> assignment){

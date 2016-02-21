@@ -8,7 +8,7 @@ import java.util.Map;
 public class ForwardChecking implements Selector2{
 	
 	public ForwardChecking(){}
-	
+
 	public boolean checkFurther(Map<Character, Bag> bagMap, Item item, char bagName, List<Character> unassignedVar){
 		//mutual friends
 		List<Item> mutualFriends = item.getMutualFriends();
