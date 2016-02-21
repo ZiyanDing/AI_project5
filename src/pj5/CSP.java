@@ -11,6 +11,7 @@ public class CSP {
 	//algorithm wrappers
 	private Selector selector;
 	private Selector2 selector2;
+	private Orderer orderer;
 	private String filename; //input filename
 	private Map<Character, Bag> bagMap; //key is bag name
 	private Map<Character, Item> itemMap; //key is item name
@@ -20,7 +21,7 @@ public class CSP {
 	
 	private int high; 
 	private int low;
-	public CSP(String filename, Selector selector, Selector2 selector2){
+	public CSP(String filename, Selector selector, Selector2 selector2, Orderer orderer){
 		this.filename = filename;
 		this.selector = selector;
 		this.bagMap = new HashMap<>();
@@ -30,6 +31,7 @@ public class CSP {
 		this.bagList = new ArrayList<>();
 		this.itemList = new ArrayList<>();	
 		this.selector2 = selector2;
+		this.orderer = orderer;
 	}
 	public void input(){	
 		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
@@ -90,7 +92,7 @@ public class CSP {
 		return null;
 	}
 	
-	public boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment, int bagMax){
+	public static boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment, int bagMax){
 		char bagName = bag.getName();
 		//check capacity
 		if (bag.getCapacity() < item.getWeight()){
@@ -180,7 +182,7 @@ public class CSP {
 		return unassignedVar;
 	}
 	
-	public List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
+	public static List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
 		List<Character> assignedValues = new ArrayList<>();
 		if (assignment.size() > 0){
 			for (Map.Entry<Character, List<Character>> entry : assignment.entrySet()){
@@ -211,7 +213,8 @@ public class CSP {
 	}
 
 	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment, List<Bag> baglist, int bagMax){
-		List<Bag> output = new ArrayList<Bag>();
+		return orderer.orderDomainValue(var, assignment, baglist, bagMax);
+		/*List<Bag> output = new ArrayList<Bag>();
 		for (Bag bag: baglist)
 		{
 			if (consistant(bag, var, assignment, bagMax))
@@ -219,7 +222,7 @@ public class CSP {
 				output.add(bag);
 			}
 		}
-		return output;
+		return output;*/
 	}
 	
 	public void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment){
@@ -299,6 +302,7 @@ public class CSP {
 		//choose whether we'll use Minimum Remaining Values Heurstic or Not
 		Selector s;
 		Selector2 s2;
+		Orderer o = new DefaultOrderer();
 
 		if (Boolean.valueOf(args[1]) && Boolean.valueOf(args[2])){
 			s = new MRVAndDegreeSelector();
@@ -317,12 +321,12 @@ public class CSP {
 			//System.out.println("using default selector");
 		}
 		//if using forward checking or not
-		if (Boolean.valueOf(args[4])){
+		if (Boolean.valueOf(args[3])){
 			s2 = new ForwardChecking();
 		} else {
 			s2 = new DefaultSelector2();
 		}
-		CSP csp = new CSP(filename, s, s2);
+		CSP csp = new CSP(filename, s, s2, o);
 		//CSP csp = new CSP("inputs/input18.txt");
 		csp.input();
 		Map<Character, List<Character>> assignment = new HashMap<>();
