@@ -74,7 +74,7 @@ public class CSP {
 		List<Bag> domainList = orderDomainValue(item, assignment);
 		for (Bag bag: domainList){
 			char bagName = bag.getName();
-			List<Character> unassignedVar = getUnassignedVar(assignment);
+			List<Character> unassignedVar = getUnassignedVar(assignment, itemList);
 			if(!selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
 				return null;
 			}
@@ -169,7 +169,7 @@ public class CSP {
 		return null;*/
 	}
 	
-	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment){
+	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment, List<Item> itemList){
 		List<Character> unassignedVar = new ArrayList<>();
 		List<Character> assignedVar = getAssignedVar(assignment);
 		for(Item i: itemList){
