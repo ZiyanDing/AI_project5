@@ -15,10 +15,10 @@ public class CSP {
 	private String filename; //input filename
 	private Map<Character, Bag> bagMap; //key is bag name
 	private Map<Character, Item> itemMap; //key is item name
-	
+
 	private List<Bag> bagList;
 	private List<Item> itemList;
-	
+
 	private int high; 
 	private int low;
 	public CSP(String filename, Selector selector, Selector2 selector2, Orderer orderer){
@@ -43,7 +43,7 @@ public class CSP {
 		this.bagList = fd.getBagList();
 		this.itemList = fd.getItemList();
 	}
-	
+
 	public void output(Map<Character, List<Character>> assignment){
 		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
 		fd.writeFile(assignment);
@@ -55,18 +55,18 @@ public class CSP {
 		assignment = recursiveBackchecking(assignment);
 		return assignment;
 	}
-	
+
 	public Map<Character, List<Character>> recursiveBackchecking(Map<Character, List<Character>> assignment){
 		if (isCompleted(assignment)){
-			System.out.println("1");
+			//System.out.println("1");
 			if (checkBeforeOutput()){
-				System.out.println("2");
+				//System.out.println("2");
 				return assignment;
 			} else {
 				return null;
 			}
 		}
-		
+
 		for (Item item : itemList){
 			for (Bag bag: bagList){
 				if (consistant(bag, item, assignment, high)){
@@ -78,22 +78,21 @@ public class CSP {
 		List<Bag> domainList = orderDomainValue(item, assignment, bagList, high);
 		for (Bag bag: domainList){
 			char bagName = bag.getName();
-			List<Character> unassignedVar = getUnassignedVar(assignment, itemList);
-			if(!selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
-				return null;
-			}
 			if (consistant(bag, item, assignment, high)){
 				addAssignment(bag,item, assignment, bagMap, itemMap);
-				Map<Character, List<Character>> result = recursiveBackchecking(assignment);
-				if (result != null){
-					return result;
+				List<Character> unassignedVar = getUnassignedVar(assignment, itemList);
+				if(selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
+					Map<Character, List<Character>> result = recursiveBackchecking(assignment);
+					if (result != null){
+						return result;
+					}
 				}
 				removeAssignment(bag,item, assignment, bagMap, itemMap);
 			}
 		}
 		return null;
 	}
-	
+
 	public static boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment, int bagMax){
 		char bagName = bag.getName();
 		//check capacity
@@ -116,7 +115,7 @@ public class CSP {
 		List<Item> friends = item.getFriends();
 		List<Character> assignedCurBag = assignment.get(bag.getName());
 		List<Character> assigned = getAssignedVar(assignment);
-		
+
 		for (Item f: friends){
 			if (assigned != null && assigned.contains(f.getName())){
 				if (assignedCurBag == null || !assignedCurBag.contains(f.getName())){
@@ -124,7 +123,7 @@ public class CSP {
 				}
 			}
 		}
-		
+
 		//inequity
 		List<Item> enemies = item.getEnemies();
 		for(Item i: enemies){
@@ -132,12 +131,12 @@ public class CSP {
 				return false;
 			}
 		}
-		
+
 		//mutual Inclusive
 		List<Item> mutualFriends = item.getMutualFriends();
 		List<Character> bagListA = item.getMutualA();
 		List<Character> bagListB = item.getMutualB();
-		
+
 		//mutual friends
 		for (int index = 0; index < mutualFriends.size(); index++){
 			Item f = mutualFriends.get(index);
@@ -156,10 +155,10 @@ public class CSP {
 				}
 			}
 		}		
-		
+
 		return true;
 	}
-	
+
 	public Item selectUnassignedVariable(Map<Character, List<Character>> assignment, List<Item> itemList){	
 		return selector.select(assignment, itemList);
 		/*
@@ -172,7 +171,7 @@ public class CSP {
 
 		return null;*/
 	}
-	
+
 	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment, List<Item> itemList){
 		List<Character> unassignedVar = new ArrayList<>();
 		List<Character> assignedVar = getAssignedVar(assignment);
@@ -183,7 +182,7 @@ public class CSP {
 		}
 		return unassignedVar;
 	}
-	
+
 	public static List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
 		List<Character> assignedValues = new ArrayList<>();
 		if (assignment.size() > 0){
@@ -193,8 +192,8 @@ public class CSP {
 		}
 		return assignedValues;
 	}
-	
-	
+
+
 	public boolean checkBeforeOutput(){
 		for (Bag bag: bagMap.values()){
 			int used = bag.getMax() - bag.getCapacity();
@@ -209,7 +208,7 @@ public class CSP {
 		return true;
 	}
 
-	
+
 	public boolean isCompleted(Map<Character, List<Character>> assignment){
 		return (itemList.size() == getAssignedVar(assignment).size());	
 	}
@@ -226,7 +225,7 @@ public class CSP {
 		}
 		return output;*/
 	}
-	
+
 	public static void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
 		addAssignmentHelper(bag, item, assignment);
 		updateMaps(bag, item, assignment, bagmap, itemmap);
@@ -243,7 +242,7 @@ public class CSP {
 			List<Character> tempItemList2 = new ArrayList<>();
 			tempItemList2.add(itemName);
 			assignment.put(bagName, tempItemList2);
-			
+
 		}
 		bag.reduceCapacity(item);
 		bag.addStored();
@@ -254,13 +253,13 @@ public class CSP {
 		bagmap.put(bag.getName(), bag);
 		itemmap.put(item.getName(), item);
 	}
-	
+
 
 	public static void removeAssignment(Bag bag,Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
 		removeAssignmentHelper(bag, item, assignment);
 		updateMaps(bag, item, assignment, bagmap, itemmap);
 	}
-	
+
 	public static void removeAssignmentHelper(Bag bag, Item item, Map<Character, List<Character>> assignment){
 		char bagName = bag.getName();
 		List<Character> tempItemList = assignment.get(bagName);
@@ -278,8 +277,8 @@ public class CSP {
 		bag.reduceStored();
 		item.removeStored(bag);
 	}
-	
-	
+
+
 	public void test1(){
 		for (Map.Entry<Character, Item> entry : itemMap.entrySet()){
 			System.out.println(entry.getKey());
@@ -311,7 +310,7 @@ public class CSP {
 			return;
 		}
 		String filename = args[0];
-		
+
 		//choose whether we'll use Minimum Remaining Values Heurstic or Not
 		Selector s;
 		Selector2 s2;
@@ -339,7 +338,7 @@ public class CSP {
 		} else {
 			s2 = new DefaultSelector2();
 		}
-		
+
 		if (Boolean.valueOf(args[4])){
 			o = new LCVOrderer();
 		}

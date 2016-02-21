@@ -162,6 +162,7 @@ public class FileDealer {
 			FileWriter writer = new FileWriter(file);
 			if (assignment == null){
 				writer.write("No possible assignment.");
+				System.out.println("No possible assignment.");
 				writer.flush();
 				writer.close();
 				return;
