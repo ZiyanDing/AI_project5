@@ -1,34 +1,35 @@
 package pj5;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class Item {
 	private char name;
 	private int weight;
 	private char stored; //which bag it is stored
-	private List<Character> allowed; //unary inclusive constraint
-	private List<Character> forbidden; //unary exclusive constraint
-	private List<Item> friends; //equal binary constraint
-	private List<Item> enemies; //not equal binary constraint
+	private HashSet<Character> allowed; //unary inclusive constraint
+	private HashSet<Character> forbidden; //unary exclusive constraint
+	private HashSet<Item> friends; //equal binary constraint
+	private HashSet<Item> enemies; //not equal binary constraint
 	private List<Item> mutualFriends; //mutual Inclusive binary constraints
 	private List<Character> mutualA;
 	private List<Character> mutualB;
 	
-	private List<Character> possibleBags;
+	private HashSet<Character> possibleBags;
 	
 	public Item(char name, int weight){
 		this.name = name;
 		this.weight = weight;
 		this.stored = ' ';
-		this.allowed = new ArrayList<>();
-		this.forbidden = new ArrayList<>();
-		this.friends = new ArrayList<>();
-		this.enemies = new ArrayList<>();
+		this.allowed = new HashSet<>();
+		this.forbidden = new HashSet<>();
+		this.friends = new HashSet<>();
+		this.enemies = new HashSet<>();
 		this.mutualFriends = new ArrayList<>();
 		this.mutualA = new ArrayList<>();
 		this.mutualB = new ArrayList<>();
-		this.possibleBags = new ArrayList<>();
+		this.possibleBags = new HashSet<>();
 	}
 	
 	public void addAllowed(char c){
@@ -68,13 +69,13 @@ public class Item {
 	public char getName(){return name;}
 	public int getWeight(){return weight;}
 	public char getStored(){return stored;}
-	public List<Character> getAllowed(){return allowed;}
-	public List<Character> getForbidden(){return forbidden;}
-	public List<Item> getFriends(){return friends;}
-	public List<Item> getEnemies(){return enemies;}
+	public HashSet<Character> getAllowed(){return allowed;}
+	public HashSet<Character> getForbidden(){return forbidden;}
+	public HashSet<Item> getFriends(){return friends;}
+	public HashSet<Item> getEnemies(){return enemies;}
 	public List<Item> getMutualFriends(){return mutualFriends;}
 	public List<Character> getMutualA(){return mutualA;}
 	public List<Character> getMutualB(){return mutualB;}
-	public List<Character> getPossibleBags(){return possibleBags;}
+	public HashSet<Character> getPossibleBags(){return possibleBags;}
 	
 }

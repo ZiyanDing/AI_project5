@@ -3,6 +3,7 @@ package pj5;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,11 +53,11 @@ public class CSP {
 	//following is backtracking algorithm
 	public Map<Character, List<Character>> backtracking(){
 		Map<Character, List<Character>> assignment = new HashMap<>();
-		assignment = recursiveBackchecking(assignment);
+		assignment = recursiveBackchecking(assignment, 0, "");
 		return assignment;
 	}
 
-	public Map<Character, List<Character>> recursiveBackchecking(Map<Character, List<Character>> assignment){
+	public Map<Character, List<Character>> recursiveBackchecking(Map<Character, List<Character>> assignment, int debugdepth, String format){
 		if (isCompleted(assignment)){
 			//System.out.println("1");
 			if (checkBeforeOutput()){
@@ -76,19 +77,23 @@ public class CSP {
 		}
 		Item item = selectUnassignedVariable(assignment, itemList);
 		List<Bag> domainList = orderDomainValue(item, assignment, bagList, high);
+		//int i = 0;
 		for (Bag bag: domainList){
 			char bagName = bag.getName();
-			if (consistant(bag, item, assignment, high)){
-				addAssignment(bag,item, assignment, bagMap, itemMap);
-				List<Character> unassignedVar = getUnassignedVar(assignment, itemList);
-				if(selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
-					Map<Character, List<Character>> result = recursiveBackchecking(assignment);
-					if (result != null){
-						return result;
-					}
+			addAssignment(bag,item, assignment, bagMap, itemMap);
+			List<Character> unassignedVar = getUnassignedVar(assignment, itemList);
+			if(selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
+				Map<Character, List<Character>> result = recursiveBackchecking(assignment, debugdepth + 1, format + "\t");
+				if (result != null){
+					return result;
 				}
-				removeAssignment(bag,item, assignment, bagMap, itemMap);
 			}
+			removeAssignment(bag,item, assignment, bagMap, itemMap);
+			/*debug stuff
+			if (debugdepth <= 10){
+				System.out.println(format + "At depth "+ String.valueOf(debugdepth) + " on iteration " + String.valueOf(i));
+			}
+			i+=1;*/
 		}
 		return null;
 	}
@@ -112,7 +117,7 @@ public class CSP {
 		}
 		//binary constrains
 		//equity
-		List<Item> friends = item.getFriends();
+		HashSet<Item> friends = item.getFriends();
 		List<Character> assignedCurBag = assignment.get(bag.getName());
 		List<Character> assigned = getAssignedVar(assignment);
 
@@ -125,7 +130,7 @@ public class CSP {
 		}
 
 		//inequity
-		List<Item> enemies = item.getEnemies();
+		HashSet<Item> enemies = item.getEnemies();
 		for(Item i: enemies){
 			if (assignedCurBag !=null && assignedCurBag.contains(i.getName())){
 				return false;
