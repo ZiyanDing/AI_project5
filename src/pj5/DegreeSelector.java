@@ -1,18 +1,19 @@
 package pj5;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 public class DegreeSelector implements Selector {
 
 	public DegreeSelector(){}
-	
+
 	@Override
-	public Item select(Map<Character, List<Character>> assignment, List<Item> itemList) {
+	public Item select(Map<Character, HashSet<Character>> assignment, List<Item> itemList) {
 		List<Character> assignedValues = new ArrayList<>();
 		if (assignment.size() > 0){
-			for (Map.Entry<Character, List<Character>> entry : assignment.entrySet()){
+			for (Map.Entry<Character, HashSet<Character>> entry : assignment.entrySet()){
 				assignedValues.addAll(entry.getValue());
 			}
 		}

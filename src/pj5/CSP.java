@@ -45,19 +45,19 @@ public class CSP {
 		this.itemList = fd.getItemList();
 	}
 
-	public void output(Map<Character, List<Character>> assignment){
+	public void output(Map<Character, HashSet<Character>> assignment){
 		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
 		fd.writeFile(assignment);
 	}
 
 	//following is backtracking algorithm
-	public Map<Character, List<Character>> backtracking(){
-		Map<Character, List<Character>> assignment = new HashMap<>();
+	public Map<Character, HashSet<Character>> backtracking(){
+		Map<Character, HashSet<Character>> assignment = new HashMap<>();
 		assignment = recursiveBackchecking(assignment, 0, "");
 		return assignment;
 	}
 
-	public Map<Character, List<Character>> recursiveBackchecking(Map<Character, List<Character>> assignment, int debugdepth, String format){
+	public Map<Character, HashSet<Character>> recursiveBackchecking(Map<Character, HashSet<Character>> assignment, int debugdepth, String format){
 		if (isCompleted(assignment)){
 			//System.out.println("1");
 			if (checkBeforeOutput()){
@@ -70,9 +70,9 @@ public class CSP {
 
 		for (Item item : itemList){
 			for (Bag bag: bagList){
-				if (consistant(bag, item, assignment, high)){
+				//if (consistant(bag, item, assignment, high)){
 					item.addPossibleBag(bag.getName());
-				}
+				//}
 			}
 		}
 		Item item = selectUnassignedVariable(assignment, itemList);
@@ -83,7 +83,7 @@ public class CSP {
 			addAssignment(bag,item, assignment, bagMap, itemMap);
 			List<Character> unassignedVar = getUnassignedVar(assignment, itemList);
 			if(selector2.checkFurther(bagMap, item, bagName, unassignedVar)){ //used to implements forward checking
-				Map<Character, List<Character>> result = recursiveBackchecking(assignment, debugdepth + 1, format + "\t");
+				Map<Character, HashSet<Character>> result = recursiveBackchecking(assignment, debugdepth + 1, format + "\t");
 				if (result != null){
 					return result;
 				}
@@ -98,7 +98,7 @@ public class CSP {
 		return null;
 	}
 
-	public static boolean consistant(Bag bag, Item item, Map<Character, List<Character>> assignment, int bagMax){
+	public static boolean consistant(Bag bag, Item item, Map<Character, HashSet<Character>> assignment, int bagMax){
 		char bagName = bag.getName();
 		//check capacity
 		if (bag.getCapacity() < item.getWeight()){
@@ -118,7 +118,7 @@ public class CSP {
 		//binary constrains
 		//equity
 		HashSet<Item> friends = item.getFriends();
-		List<Character> assignedCurBag = assignment.get(bag.getName());
+		HashSet<Character> assignedCurBag = assignment.get(bag.getName());
 		List<Character> assigned = getAssignedVar(assignment);
 
 		for (Item f: friends){
@@ -164,7 +164,7 @@ public class CSP {
 		return true;
 	}
 
-	public Item selectUnassignedVariable(Map<Character, List<Character>> assignment, List<Item> itemList){	
+	public Item selectUnassignedVariable(Map<Character, HashSet<Character>> assignment, List<Item> itemList){	
 		return selector.select(assignment, itemList);
 		/*
 		List<Character> assignedValues = getAssignedVar(assignment);
@@ -177,7 +177,7 @@ public class CSP {
 		return null;*/
 	}
 
-	public List<Character> getUnassignedVar(Map<Character, List<Character>> assignment, List<Item> itemList){
+	public List<Character> getUnassignedVar(Map<Character, HashSet<Character>> assignment, List<Item> itemList){
 		List<Character> unassignedVar = new ArrayList<>();
 		List<Character> assignedVar = getAssignedVar(assignment);
 		for(Item i: itemList){
@@ -188,10 +188,10 @@ public class CSP {
 		return unassignedVar;
 	}
 
-	public static List<Character> getAssignedVar(Map<Character, List<Character>> assignment){
+	public static List<Character> getAssignedVar(Map<Character, HashSet<Character>> assignment){
 		List<Character> assignedValues = new ArrayList<>();
 		if (assignment.size() > 0){
-			for (Map.Entry<Character, List<Character>> entry : assignment.entrySet()){
+			for (Map.Entry<Character, HashSet<Character>> entry : assignment.entrySet()){
 				assignedValues.addAll(entry.getValue());
 			}
 		}
@@ -214,11 +214,11 @@ public class CSP {
 	}
 
 
-	public boolean isCompleted(Map<Character, List<Character>> assignment){
+	public boolean isCompleted(Map<Character, HashSet<Character>> assignment){
 		return (itemList.size() == getAssignedVar(assignment).size());	
 	}
 
-	public List<Bag> orderDomainValue(Item var, Map<Character, List<Character>> assignment, List<Bag> baglist, int bagMax){
+	public List<Bag> orderDomainValue(Item var, Map<Character, HashSet<Character>> assignment, List<Bag> baglist, int bagMax){
 		return orderer.orderDomainValue(var, itemList, assignment, baglist, bagMax);
 		/*List<Bag> output = new ArrayList<Bag>();
 		for (Bag bag: baglist)
@@ -231,20 +231,20 @@ public class CSP {
 		return output;*/
 	}
 
-	public static void addAssignment(Bag bag, Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
+	public static void addAssignment(Bag bag, Item item, Map<Character, HashSet<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
 		addAssignmentHelper(bag, item, assignment);
 		updateMaps(bag, item, assignment, bagmap, itemmap);
 	}
 	//helper function to modify an assignment by putting the given item in the given bag
-	public static void addAssignmentHelper(Bag bag, Item item, Map<Character, List<Character>> assignment){
+	public static void addAssignmentHelper(Bag bag, Item item, Map<Character, HashSet<Character>> assignment){
 		char bagName = bag.getName();
 		char itemName = item.getName();
-		List<Character> tempItemList = assignment.get(bagName);
+		HashSet<Character> tempItemList = assignment.get(bagName);
 		if(tempItemList != null){
 			tempItemList.add(itemName);
 			assignment.put(bagName, tempItemList);		
 		}else{
-			List<Character> tempItemList2 = new ArrayList<>();
+			HashSet<Character> tempItemList2 = new HashSet<>();
 			tempItemList2.add(itemName);
 			assignment.put(bagName, tempItemList2);
 
@@ -254,27 +254,38 @@ public class CSP {
 		item.addStored(bag);
 	}
 	//helper function to update appropriate maps
-	public static void updateMaps(Bag bag, Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
+	public static void updateMaps(Bag bag, Item item, Map<Character, HashSet<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
 		bagmap.put(bag.getName(), bag);
 		itemmap.put(item.getName(), item);
 	}
 
 
-	public static void removeAssignment(Bag bag,Item item, Map<Character, List<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
+	public static void removeAssignment(Bag bag,Item item, Map<Character, HashSet<Character>> assignment, Map<Character, Bag> bagmap, Map<Character, Item> itemmap){
 		removeAssignmentHelper(bag, item, assignment);
 		updateMaps(bag, item, assignment, bagmap, itemmap);
 	}
 
-	public static void removeAssignmentHelper(Bag bag, Item item, Map<Character, List<Character>> assignment){
+	public static void removeAssignmentHelper(Bag bag, Item item, Map<Character, HashSet<Character>> assignment){
 		char bagName = bag.getName();
-		List<Character> tempItemList = assignment.get(bagName);
-		int index = 0;
+		HashSet<Character> tempItemList = assignment.get(bagName);
+		//int index = 0;
 		if(tempItemList != null){
+			/*
 			for (index = 0; index < tempItemList.size(); index++){
 				if (tempItemList.get(index) == item.getName()){
 					tempItemList.remove(index);
 					break;
 				}
+			}*/
+			Character toremove = null;
+			for (Character i: tempItemList){
+				if (i == item.getName()){
+					toremove = i;
+					break;
+				}
+			}
+			if (toremove != null){
+				tempItemList.remove(toremove);
 			}
 			assignment.put(bagName, tempItemList);
 		}
@@ -353,7 +364,7 @@ public class CSP {
 		CSP csp = new CSP(filename, s, s2, o);
 		//CSP csp = new CSP("inputs/input18.txt");
 		csp.input();
-		Map<Character, List<Character>> assignment = new HashMap<>();
+		Map<Character, HashSet<Character>> assignment = new HashMap<>();
 		assignment = csp.backtracking();
 		csp.output(assignment);
 		//csp.test1();

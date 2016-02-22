@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -155,7 +156,7 @@ public class FileDealer {
 		}
 	}
 	
-	public void writeFile(Map<Character, List<Character>> assignment){
+	public void writeFile(Map<Character, HashSet<Character>> assignment){
 		File file = new File("output.txt");
 		try {
 			file.createNewFile();
@@ -167,13 +168,13 @@ public class FileDealer {
 				writer.close();
 				return;
 			}
-			for (Map.Entry<Character, List<Character>> entry : assignment.entrySet()){
+			for (Map.Entry<Character, HashSet<Character>> entry : assignment.entrySet()){
 				
 				char bagName = entry.getKey();
 				Bag bag = bagMap.get(bagName);
 				int capacity = bag.getCapacity();
 				int max = bag.getMax();
-				List<Character> itemNames = entry.getValue();
+				HashSet<Character> itemNames = entry.getValue();
 				writer.write(bagName + " ");
 				//System.out.println("assignment  " + bagName + " " +itemNames);
 				for (char c: itemNames){

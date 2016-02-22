@@ -23,7 +23,7 @@ public class LCVOrderer implements Orderer {
 		}
 	}
 	@Override
-	public List<Bag> orderDomainValue(Item var, List<Item> itemList, Map<Character, List<Character>> assignment, List<Bag> bagList, int bagMax) {
+	public List<Bag> orderDomainValue(Item var, List<Item> itemList, Map<Character, HashSet<Character>> assignment, List<Bag> bagList, int bagMax) {
 		HashSet<Bag> newBagList = new HashSet<Bag>();
 		for (Bag b: bagList){
 			if (CSP.consistant(b, var, assignment, bagMax)){
@@ -47,7 +47,7 @@ public class LCVOrderer implements Orderer {
 		}
 		return output;
 	}		
-	public int domainSize(List<Item> itemList, Map<Character, List<Character>> assignment, List<Bag> bagList, int bagMax) {
+	public int domainSize(List<Item> itemList, Map<Character, HashSet<Character>> assignment, List<Bag> bagList, int bagMax) {
 		int total = 0;
 		for (Item item: itemList){
 			for (Bag bag: bagList){
