@@ -22,6 +22,7 @@ public class CSP {
 
 	private int high; 
 	private int low;
+	private int searchNumCount;
 	public CSP(String filename, Selector selector, Selector2 selector2, Orderer orderer){
 		this.filename = filename;
 		this.selector = selector;
@@ -33,6 +34,7 @@ public class CSP {
 		this.itemList = new ArrayList<>();	
 		this.selector2 = selector2;
 		this.orderer = orderer;
+		this.searchNumCount = 0;
 	}
 	public void input(){	
 		FileDealer fd = new FileDealer(filename, itemMap, bagMap, low, high, itemList, bagList);
@@ -58,6 +60,7 @@ public class CSP {
 	}
 
 	public Map<Character, HashSet<Character>> recursiveBackchecking(Map<Character, HashSet<Character>> assignment, int debugdepth, String format){
+		searchNumCount++;
 		if (isCompleted(assignment)){
 			//System.out.println("1");
 			if (checkBeforeOutput()){
@@ -368,6 +371,7 @@ public class CSP {
 		assignment = csp.backtracking();
 		csp.output(assignment);
 		//csp.test1();
+		System.out.println("The search runs " + csp.searchNumCount + " times");
 		return;
 	}
 }
