@@ -10,6 +10,7 @@ public class LCVOrderer implements Orderer {
 
 	public LCVOrderer(){} //trick java into doing what we want
 	
+	//this is a class that mimics bag but has an additional parameter you can sort over.
 	private class BagConstrain implements Comparable<BagConstrain>{
 		public Bag bag;
 		public int val;
@@ -46,7 +47,8 @@ public class LCVOrderer implements Orderer {
 			output.add(b.bag);
 		}
 		return output;
-	}		
+	}	
+	//compute the sum of the cardinalities of the domains of all the varialbes under the given assignment.
 	public int domainSize(List<Item> itemList, Map<Character, HashSet<Character>> assignment, List<Bag> bagList, int bagMax) {
 		int total = 0;
 		for (Item item: itemList){
